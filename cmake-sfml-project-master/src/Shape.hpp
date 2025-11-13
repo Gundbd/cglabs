@@ -51,7 +51,7 @@ public:
     virtual void resize(float size) = 0; 
     virtual void move(sf::Vector2f position) = 0; 
     virtual void rotate(sf::Angle) = 0;
-    virtual void draw(sf::RenderTarget& target) const = 0; 
+    virtual void draw(sf::RenderTarget& target) const = 0;
     virtual ~Shape() = default;
 };
 
@@ -118,6 +118,31 @@ public:
         target.draw(m_outRectangle);
         target.draw(m_circle);
         target.draw(m_inRectangle);
+    }
+
+    // func calculate corner coords after rotation
+    std::vector<sf::Vector2f> getCornerCoords() {
+        std::vector<sf::Vector2f> transCoords;
+        sf::Vector2f center = m_outRectangle.getPosition();
+        
+        float cos_alpha = cos(m_angle.asRadians());
+        float sin_alpha = sin(m_angle.asRadians());
+        
+        std::vector<sf::Vector2f> localCorners = {
+            {center.x - m_size, center.y + m_size},
+            {center.x + m_size, center.y + m_size},
+            {center.x + m_size, center.y - m_size},
+            {center.x - m_size, center.y - m_size}
+        };
+
+        for(const sf::Vector2f& corner : localCorners){
+            float dx = (corner.x - center.x) * cos_alpha - (corner.y - center.y) * sin_alpha;
+            float dy = (corner.x - center.x) * sin_alpha + (corner.y - center.y) * cos_alpha;\
+            transCoords.push_back({dx, dy});
+        }
+
+        return transCoords;
+
     }
 
 }; 

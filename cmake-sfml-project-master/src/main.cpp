@@ -12,7 +12,12 @@ int main()
 {
     try {
         sf::RenderWindow window(sf::VideoMode({800u, 600u}), "My window");
-            
+        
+        StrangeShape shape;
+        shape.resize(200);
+        shape.move({400, 300});
+
+
         while (window.isOpen())
         {
             while (const std::optional event = window.pollEvent())
@@ -22,7 +27,9 @@ int main()
                     window.close();
             } 
                 
+
                 window.clear();
+                shape.draw(window);
                 window.display();
         }
 

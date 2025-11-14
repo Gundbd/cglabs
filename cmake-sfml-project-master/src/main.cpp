@@ -4,7 +4,7 @@
 #include "BezierCurve.hpp"
 #include <iostream>
 
-//TODO: rotation manipulate with handl input + shape.rotate(); 
+//TODO: handling input works damn god wrong 
 //TODO: class handleInput depends on the figure in constr, to manipulate, points on Bezier Curve need another class for Handle input? - bad idea;
 //TODO: pretty men where you can pick objects: shapes, curves, and it's will draw automaticaly
 
@@ -13,11 +13,14 @@ int main()
     try {
         sf::RenderWindow window(sf::VideoMode({800u, 600u}), "My window");
         
-        StrangeShape shape;
-        shape.resize(200);
-        shape.move({400, 300});
+        PolygonalShape shape;
 
+        HandleInput input(&shape, &window);
 
+        shape.move({400.f, 300.f});
+        shape.resize(100.f);
+        shape.rotate(sf::degrees(-10));
+    
         while (window.isOpen())
         {
             while (const std::optional event = window.pollEvent())
@@ -27,6 +30,28 @@ int main()
                     window.close();
             } 
                 
+                std::cout << input.isInside() << std::endl;
+                std::cout << input.isUpperCorner() << std::endl;
+
+
+                
+                if(input.isOnCorner()){
+                    if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)){
+                        if(input.isUpperCorner()){
+                            shape.rotate(shape.getAngle() + sf::degrees(1));
+                        }
+                        else shape.rotate(shape.getAngle() - sf::degrees(1));
+                    }
+                    if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)){
+                        if(input.isInside()){
+                            shape.resize(shape.getSize() - 1);
+                        }
+                        else shape.resize(shape.getSize() + 1);
+                    }
+                }
+
+
+
 
                 window.clear();
                 shape.draw(window);

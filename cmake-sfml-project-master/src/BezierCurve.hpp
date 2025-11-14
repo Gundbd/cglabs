@@ -82,12 +82,6 @@ public:
             target.draw(circle);
         }
 
-
-
-
-
-
-
     }
 
 
@@ -102,8 +96,5 @@ public:
     void setSegment(int segment) {
         m_segmentSize = segment;
     }
-
-
-
 
 };

@@ -8,6 +8,7 @@ const float DEFAULT_SIZE = 40;
 const float WIN_WIDTH = 800; 
 const float WIN_HEIGHT = 600;
 const sf::Angle DEFAULT_ANGLE = sf::degrees(0);
+const float PI = acos(-1.0);
 
 class Shape {
 protected:
@@ -33,6 +34,10 @@ public:
         m_color = params.color;
         m_position = params.position;
     }
+
+    sf::Angle getAngle() {
+        return m_angle;
+    }
     
     float getSize() const {
         return m_size;
@@ -45,13 +50,13 @@ public:
     sf::Vector2f getPosition() const {
         return m_position;
     }
-    
         
     virtual void fillColor(const sf::Color& color)= 0;
     virtual void resize(float size) = 0; 
-    virtual void move(sf::Vector2f position) = 0; 
-    virtual void rotate(sf::Angle) = 0;
+    virtual void move(const sf::Vector2f& position) = 0; 
+    virtual void rotate(const sf::Angle& angle) = 0;
     virtual void draw(sf::RenderTarget& target) const = 0;
+    virtual std::vector<sf::Vector2f> getCornerCoords() = 0;
     virtual ~Shape() = default;
 };
 
@@ -101,13 +106,13 @@ public:
         update();
     }
 
-    void move(sf::Vector2f position) override {
+    void move(const sf::Vector2f& position) override {
         m_position.x = position.x; 
         m_position.y = position.y; 
         update();
     }
 
-    void rotate(sf::Angle angle) override {
+    void rotate(const sf::Angle& angle) override {
         m_angle = angle;
         m_outRectangle.setRotation(angle);
         m_inRectangle.setRotation(angle);
@@ -121,7 +126,7 @@ public:
     }
 
     // func calculate corner coords after rotation
-    std::vector<sf::Vector2f> getCornerCoords() {
+    std::vector<sf::Vector2f> getCornerCoords() override {
         std::vector<sf::Vector2f> transCoords;
         sf::Vector2f center = m_outRectangle.getPosition();
         
@@ -153,16 +158,55 @@ private:
     sf::ConvexShape m_convex; 
 
     void update() {
+        //local points coords
+        std::vector<sf::Vector2f> localPoints {
+            {0, 0},
+            {m_size, 0},
+            {m_size / 2, 4 * (m_size / 5)}, 
+            {m_size, m_size},
+            {0, m_size},
+            {m_size / 2, m_size / 5}
+        };
 
-        m_convex.setPointCount(6);
+        // find local center
+        sf::Vector2f localCenter = {0, 0};
+        for(const auto& point : localPoints){
+            localCenter.x += point.x;
+            localCenter.y += point.y;
+        }
+        localCenter.x /= localPoints.size();
+        localCenter.y /= localPoints.size();
 
-        m_convex.setPoint(0, {m_position.x, m_position.y});
-        m_convex.setPoint(1, {m_position.x + m_size, m_position.y});
-        m_convex.setPoint(2, {m_position.x + m_size / 2, m_position.y + 4 * (m_size / 5)});
-        m_convex.setPoint(3, {m_position.x + m_size, m_position.y + m_size});
-        m_convex.setPoint(4, {m_position.x, m_position.y + m_size});
-        m_convex.setPoint(5, {m_position.x + m_size / 2, m_position.y + (m_size / 5)}); 
+    
+        m_convex.setPointCount(localPoints.size());
 
+        // rotate every point if needed
+        if(std::abs(m_angle.asRadians()) < 1e-5){
+            for(int i = 0; i < localPoints.size(); ++i){
+                m_convex.setPoint(i, {
+                    m_position.x + localPoints[i].x,
+                    m_position.y + localPoints[i].y
+                });
+            }
+        }
+        else{
+            float cosA = std::cos(m_angle.asRadians());
+            float sinA = std::sin(m_angle.asRadians());
+
+            for(int i = 0; i < localPoints.size(); ++i){
+
+                float dx = localPoints[i].x - localCenter.x;
+                float dy = localPoints[i].y - localCenter.y;
+
+                float rotated_x = localCenter.x + dx * cosA - dy * sinA;
+                float rotated_y = localCenter.y + dx * sinA + dy * cosA;
+
+                m_convex.setPoint(i, {
+                    m_position.x + rotated_x,
+                    m_position.y + rotated_y
+                });
+            } 
+        }
     }
 
 public:
@@ -180,17 +224,28 @@ public:
         update();
     }
 
-    void move(sf::Vector2f position) override {
+    void move(const sf::Vector2f& position) override {
         m_position.x = position.x; 
         m_position.y = position.y; 
         update();
     }
 
-    void rotate(sf::Angle angle) override {
+    void rotate(const sf::Angle& angle) override {
         m_angle = angle;
         update();
     }  
 
+
+    std::vector<sf::Vector2f> getCornerCoords() override {
+        std::vector<sf::Vector2f> corners;
+
+        corners.push_back(m_convex.getPoint(0));
+        corners.push_back(m_convex.getPoint(1));
+        corners.push_back(m_convex.getPoint(3));
+        corners.push_back(m_convex.getPoint(4)); 
+
+        return corners;
+    }
 
     void draw(sf::RenderTarget& target) const override {
         target.draw(m_convex); 

@@ -10,7 +10,7 @@ public:
 
     HandleInput(Shape* shape, sf::RenderWindow* window) : m_shape(shape), m_window(window) {}
 
-   
+    
 
     bool isInside() {
         float x_mouse = sf::Mouse::getPosition(*m_window).x;
@@ -27,17 +27,32 @@ public:
     }
 
 
-    bool isUpperCorner() {
+    int getCornerIndex(){
         float x_mouse = sf::Mouse::getPosition(*m_window).x;
         float y_mouse = sf::Mouse::getPosition(*m_window).y;
 
         std::vector<sf::Vector2f> corners = m_shape->getCornerCoords();
 
-        for(const auto& corner : corners){
-            if(isOnCorner() && y_mouse <= corner.y) { return true; }
+        for(int i = 0; i < corners.size(); ++i){
+            if(std::abs(x_mouse - corners[i].x) <= 30 &&
+                std::abs(y_mouse - corners[i].y) <= 30) 
+                return i;
         }
+        
+        return -1;
 
-        return false;
+    }
+
+
+    bool isUpperCorner() {
+        int cornerIndex = getCornerIndex();
+        if(cornerIndex == -1) return false;
+
+        std::vector<sf::Vector2f> corners = m_shape->getCornerCoords();
+
+        float y_mouse = sf::Mouse::getPosition(*m_window).y;
+
+        return y_mouse > corners[cornerIndex].y;
 
     }
 
@@ -49,7 +64,7 @@ public:
         float y_mouse = sf::Mouse::getPosition(*m_window).y;
         
         for(const auto& corner : corners){
-            if(std::abs(x_mouse - corner.x) <= 10 && std::abs(y_mouse - corner.y) <= 10){
+            if(std::abs(x_mouse - corner.x) <= 30 && std::abs(y_mouse - corner.y) <= 30){
                 return true; 
             }    
         }

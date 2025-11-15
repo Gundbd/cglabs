@@ -20,6 +20,12 @@ int main()
         shape.move({400.f, 300.f});
         shape.resize(100.f);
         shape.rotate(sf::degrees(-10));
+
+        BezierCurve curve;
+        curve.setControlPoints({shape.getPoint(0), shape.getPoint(1), shape.getPoint(2)});
+        curve.addControlPoint({shape.getPoint(3)});
+        curve.addControlPoint({shape.getPoint(4)});
+        curve.addControlPoint({ shape.getPoint(5)});
     
         while (window.isOpen())
         {
@@ -34,27 +40,33 @@ int main()
                 std::cout << input.isUpperCorner() << std::endl;
 
 
-                
-                if(input.isOnCorner()){
+                int cornerIndex = input.getCornerIndex();
+                if(cornerIndex != -1){
                     if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)){
                         if(input.isUpperCorner()){
                             shape.rotate(shape.getAngle() + sf::degrees(1));
                         }
-                        else shape.rotate(shape.getAngle() - sf::degrees(1));
+                        else {
+                            shape.rotate(shape.getAngle() - sf::degrees(1));
+                        }
                     }
                     if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)){
                         if(input.isInside()){
                             shape.resize(shape.getSize() - 1);
                         }
-                        else shape.resize(shape.getSize() + 1);
+                        else {
+                            shape.resize(shape.getSize() + 1);
+                        }
                     }
                 }
 
 
 
-
+                
                 window.clear();
+                curve.draw(window);
                 shape.draw(window);
+
                 window.display();
         }
 

@@ -236,6 +236,10 @@ public:
     }  
 
 
+    sf::Vector2f getPoint(int i) {
+        return m_convex.getPoint(i);
+    }
+
     std::vector<sf::Vector2f> getCornerCoords() override {
         std::vector<sf::Vector2f> corners;
 
